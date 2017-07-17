@@ -1,0 +1,209 @@
+---
+title: 'Granitz_Stephan'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Test Items
+
+##### (1) (4 points) Create a vector that contains the following, in this order, and print the contents.  Do not round off any values unless requested.
+* A sequence of integers from 5 to 10, inclusive.
+* A two repetitions of the vector c(2, -5.1, -23).
+* The value of the sum of 7/42 and 3
+
+```{r test1, eval = TRUE, echo = TRUE}
+a1 <- 5:10
+a2 <- c(2, -5.1, -23)
+a3 <- 7 / 42 + 3
+
+test1 <- c(a1, rep(a2, 2), a3) 
+```
+
+(1)(a) Extract the first and last elements of the vector you have created to form another vector using the extracted elements. Print this vector.
+
+```{r test1a, eval = TRUE, echo = TRUE}
+test1a <- c(test1[1], tail(test1, 1))
+print(test1a)
+
+```
+
+(1)(b) Form a third vector from the elements not extracted in (a). Print this vector.
+
+```{r test1b, eval = TRUE, echo = TRUE}
+test1b <- test1[2:(length(test1) - 1)]
+print(test1b)
+
+```
+
+(1)(c) Use the vectors from (a) and (b) to reconstruct the original vector.  Print this vector. Sum the elements of this vector, and round the sum to one decimal place. Print the result.
+
+```{r test1c, eval = TRUE, echo = TRUE}
+test1c <- c(test1a[1], test1b, test1a[2])
+print(test1c)
+print(round(sum(test1c), 1))
+
+```
+
+
+-----
+
+##### (2) (4 points) The expression y = a + bx + cx^2 is a quadratic function.
+
+(2)(a) Write a function in R that accepts values for a, b, c and x and returns a value for y.
+
+```{r test2a, eval = TRUE, echo = TRUE}
+quadraticFunction <- function(a, b, c, x) {
+  a + b * x + c * x ^ 2
+}
+
+```
+
+(2)(b) Create a vector, x, of 101 equally-spaced values from -2 to 2, inclusive. **Do not print x.**  Pass the following values - a = -1, b = 0 and c = 1 - to your function in (a) and, using the vector x, calculate values for a vector, y.  **Do not print y.**
+
+```{r test2b, eval = TRUE, echo = TRUE}
+low <- -2
+high <- 2
+x <- seq(low, high, (high - low) / 100)
+y <- quadraticFunction(a = -1, b = 0, c = 1, x = x)
+
+```
+
+(2)(c) Plot y versus x in color, with x on the horizontal axis. Add a title and other features such as a legend to this plot.
+
+```{r test2c, eval = TRUE, echo = TRUE}
+library(ggplot2)
+ggplot(mapping = aes(x, y)) +
+  geom_point(aes(color = y)) +
+  scale_colour_gradient2(low = "red", mid = "grey",
+                         high = "green", midpoint = 1) +
+  theme_bw() + theme(legend.position = "right") +
+  labs(x = "x value", y = "y value",
+       title = "Quadratic Function Results")
+
+```
+
+
+(2)(d) Roots are sometimes refered to as the "zeros" of a function.  Confirm the roots of the  quadratic function in (b) are -1 and 1  
+
+```{r test2d, eval = TRUE, echo = TRUE}
+quadraticFunction(a = -1, b = 0, c = 1, x = c(-1, 1)) == 0
+
+```
+
+-----
+
+##### (3) (10 points) Use the "trees" dataset for the following items. This dataset has three variables (Girth, Height, Volume) on 31 trees.
+
+(3)(a) Use *data(trees)* to load the file.  Check the structure and return the median values for the three variables in "trees." Using R and logicals, give the row number and print the three measurements - Girth, Height and Volume - of the tree with Volume equal to the median of Volume.
+
+```{r test3a, eval = TRUE, echo = TRUE}
+data(trees)
+str(trees)
+apply(trees, 2, median)
+print(trees[which(trees$Volume == median(trees$Volume)), ])
+
+```
+
+(3)(b) Girth is defined as the diameter of a tree taken at 4 feet 6 inches from the ground. Convert each diameter to a radius, r. Calculate the cross-sectional area of each tree using pi times the squared radius. Present stem-and-leaf plots of the radius and area. 
+
+```{r test3b, eval = TRUE, echo = TRUE}
+trees$radius <- trees$Girth / 2
+trees$cs_area <- trees$radius ^ 2 * pi
+
+stem(trees$radius)
+stem(trees$cs_area)
+
+```
+
+(3)(c) Present colored boxplots of the radii and areas calculated in (b) along with Height and Volume. Label each accordingly.
+
+```{r test3c, eval = TRUE, echo = TRUE}
+par(mfrow = c(1, 4))
+boxplot(trees$radius, main = "Radius", col = c("steelblue"))
+boxplot(trees$cs_area, main = "Cross-sectional Area", col = c("tomato"))
+boxplot(trees$Height, main = "Height", col = c("gold"))
+boxplot(trees$Volume, main = "Volume", col = c("blueviolet"))
+
+```
+
+(3)(d) Demonstrate that the outlier revealed in the boxplot of Volume is not an extreme outlier.  
+
+```{r test3d, eval = TRUE, echo = TRUE}
+if (length(boxplot.stats(trees$Volume, coef = 3, do.conf = FALSE)$out) != 0)
+       print("Outlier is extreme") else print("Outlier is not extreme")
+
+```
+
+(3)(e) Plot Volume versus Area in color with Area on the horizontal axis.  Add a title.  Present a horizontal line and a vertical line corresponding to the location of the median for Volume and Area respectively.  
+
+```{r test3e, eval = TRUE, echo = TRUE}
+plot(trees$cs_area, trees$Volume, xlab = "Area", ylab = "Volume", 
+     col = "darkgoldenrod", main = "Volume vs. Area")
+abline(h = median(trees$Volume), col = "indianred")
+abline(v = median(trees$cs_area), col = "indianred")
+
+```
+
+-----
+
+##### (4) (3 points) Solve the following system of linear equations. Display the R script and the numerical solutions for x, y and z. Demonstrate your solution is correct by using matrix operations to reproduce the values 1, 1, 3.
+
+**x - y + z = 1**
+
+**x + y - z = 1**
+
+**x + y + z = 3**
+
+```{r test4, eval = TRUE, echo = TRUE}
+a1 <- c(1, -1, 1)
+a2 <- c(1, 1, -1)
+a3 <- c(1, 1, 1)
+
+a <- matrix(c(a1, a2, a3), nrow = 3, ncol = 3, byrow = TRUE)
+b <- c(1, 1, 3)
+paste(c('x:', 'y:', 'z:'), solve(a, b))
+a %*% solve(a, b)
+
+```
+
+-----
+
+##### (5) (4 points) Use *set.seed(123)* with mean = 0. Generate two different random samples, each of size n = 1000. Designate the first as x and use a standard deviation of 2. Designate the second as y and use a standard deviation of 1.  **Do not print x and y.**
+
+```{r test5, eval = TRUE, echo = TRUE}
+set.seed(123)
+x <- rnorm(n = 1000, mean = 0, sd = 2)
+y <- rnorm(n = 1000, mean = 0, sd = 1)
+
+```
+
+(5)(a) Generate a new object using *cbind(x, y)*. Do not print this object.  Use *apply()* with this object to compute the sample standard deviation for each column:  x and y.  Round to two decimal places.  Present this result.
+
+```{r test5a, eval = TRUE, echo = TRUE}
+test5a <- cbind(x, y)
+round(apply(test5a, 2, sd), 2)
+
+```
+
+(5)(b) Present two histograms in color with titles, one for x and the second for y. Maintain comparability of the x-axes.
+
+```{r test5b, eval = TRUE, echo = TRUE}
+par(mfrow = c(1, 2))
+hist(x, xlim = c(-6, 6), main = "Sample x", col = "darkorange")
+hist(y, xlim = c(-6, 6), main = "Sample y", col = "midnightblue")
+
+```
+
+(5)(c) The two vectors, x and y, are not correlated. Use the vectors x and y without sorting or any other manipulation and plot y versus x to produce a colored, titled scatterplot of their values with x on the x-axis. **This is not a multi-colored plot.**  Use cex = 0.5 to control the size of the plotted data points.
+
+Position a legend in the lower left corner which indicates what the rounded sample standard deviations from (a) are for each variable. Check the .html document to make sure the legend does not overlap any data points.  It may be necessary to adjust the limits on the x and y axes to avoid this.
+
+```{r test5c, eval = TRUE, echo = TRUE}
+plot(x = x, y = y, cex = 0.5, xlim = c(-8, 8), ylim = c(-5, 4),
+     col = "magenta", main = "y versus x")
+legend(-8, -3, paste(c("x sd:", "y sd:"), round(apply(test5a, 2, sd), 2)))
+
+```
