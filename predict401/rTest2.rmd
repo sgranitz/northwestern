@@ -1,0 +1,346 @@
+---
+title: 'Granitz_Stephan'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Test Items (50 points total)
+
+##### (1) R has probability functions available for use (see Davies, Chapter 16, and Kabacoff, Section 5.2.3). Using one distribution to approximate another is not uncommon.
+
+(1)(a) (6 points) The normal distribution may be used to approximate the binomial distribution if np > 5 and np(1-p) > 5. Find the following binomial probabilities using *dbinom()* and *pbinom()* with a probability, p = 0.5, and n = 100. Then, estimate the same probabilities using the normal approximation **with continuity correction** and *pnorm()*.
+
+
+ (i) The probability of exactly 50 successes.
+
+```{r test2ai, eval = TRUE, echo = TRUE}
+a1 <- dbinom(x = 50, size = 100, prob = 0.5)
+print(paste("dbinom - Prob of 50 successes=", 
+            100 * round(a1, 4), "%"))
+
+a2 <- pbinom(q = 50, size = 100, prob = 0.5) - 
+  pbinom(q = 49, size = 100, prob = 0.5)
+print(paste("pbinom - Prob of 50 successes=", 
+            100 * round(a2, 4), "%"))
+
+b1 <- pnorm(q = 50 - 0.5, mean = 100 * 0.5, sd = sqrt(100 * 0.5 * 0.5))
+b2 <- pnorm(q = 50 + 0.5, mean = 100 * 0.5, sd = sqrt(100 * 0.5 * 0.5))
+print(paste("pnorm  - Prob of 50 successes=", 
+            100 * round(b2 - b1, 4), "%"))
+```
+
+ (ii) The probability of fewer than 40 successes.
+
+```{r test2aii, eval = TRUE, echo = TRUE}
+a2 <- sum(dbinom(x = 0:39, size = 100, prob = 0.5))
+print(paste("dbinom - Prob of less than 40 successes=", 
+            100 * round(a2, 4), "%"))
+
+a2 <- pbinom(q = 39, size = 100, prob = 0.5)
+print(paste("pbinom - Prob of less than 40 successes=", 
+            100 * round(a2, 4), "%"))
+b = pnorm(q = 40 - 0.5, mean = 100 * 0.5, sd = sqrt(100 * 0.5 * 0.5))
+print(paste("pnorm  - Prob of less than 40 successes=", 
+            100 * round(b, 4), "%"))
+
+```
+
+ (iii) The probability of 60 or more successes.
+
+```{r test2aiii, eval = TRUE, echo = TRUE}
+a1 <- sum(dbinom(x = 60:100, size = 100, prob = 0.5))
+print(paste("dbinom - Prob of 60 or more successes=", 
+            100 * round(a1, 4), "%"))
+
+a2 <- pbinom(q = 59, size = 100, prob = 0.5, lower.tail = FALSE)
+print(paste("pbinom - Prob of 60 or more successes=", 
+            100 * round(a2, 4), "%"))
+
+b = pnorm(q = 60 - 0.5, mean = 100 * 0.5, sd = sqrt(100 * 0.5 * 0.5))
+print(paste("pnorm  - Prob of 60 or more successes=", 
+            100 * round(1 - b, 4), "%"))
+
+```
+
+(1)(b) (4 points) With n = 100 and p = 0.02, use the binomial probabilities from *dbinom()* to calculate the expected value and variance for this binomial distribution using the general formula for mean and variance of a discrete distribution (To do this, you will need to use integer values from 0 to 100 as binomial outcomes along with the corresponding binomial probability). Calculate the same using the formulae np and np(1-p).
+
+```{r test1c, eval = TRUE, echo = TRUE}
+n  <- 100
+p  <- 0.02
+mu <- n * p            # expected value
+v  <- n * p * (1 - p)  # variance
+print(paste("standard - Expected Value =", mu, 
+            "and Variance =", v))
+
+x  <- dbinom(x = 0:n, size = n, prob = p)
+mu <- sum(0:n * x)
+v  <- sum(x * (0:n - mu)^2)
+print(paste("dbinom   - Expected Value =", round(mu, 2), 
+            "and Variance =", round(v, 2)))
+
+```
+
+-----
+
+##### (2) A recurring problem in statistics is the identification of outliers. This problem involves plotting data to display outliers, and then classiying them.
+
+(2)(a) (5 points) Generate a random sample, "x", of 100 values using *set.seed(123)* and *rexp(n = 100, rate = 1)*. Do not change this number. If you must draw another sample, start the process with *set.seed(123)* to maintain comparability with the answer sheet. Present "x" in side-by-side box- and QQ-plots, using *boxplot()* and *qqnorm()*, *qqline()*. Use *boxplot.stats()* and/or logical statements to identify the extreme outliers, if any.
+
+```{r test2a, eval = TRUE, echo = TRUE}
+set.seed(123)
+x <- rexp(n = 100, rate = 1)
+par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
+boxplot(x, main = "Boxplot",
+        col = "steelblue", outcol = "red")
+qqnorm(x, main = "Q-Q Plot",
+       col = ifelse(x %in% c(boxplot.stats(x)$out), "red", "steelblue"))
+qqline(x)
+txt <- c("Outliers of x include:", round(boxplot.stats(x)$out, 2))
+mtext(paste(txt, sep=" ", collapse="  "), outer = TRUE, cex = 1)
+
+```
+
+(2)(b) (5 points) Transform the random sample, "x", generated in (a), to form a different variable, designated "y", using the Box-Cox Transformation: y = 3*((x^(1/3)) - 1). Display the values for "y" as in (a) and identify outliers similarly.
+
+```{r test2b, eval = TRUE, echo = TRUE}
+y <- 3 * ((x ^ (1 / 3)) - 1)
+par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
+boxplot(y, main = "Boxplot",
+        col = "steelblue", outcol = "red")
+qqnorm(y, main = "Q-Q Plot",
+       col = ifelse(y %in% c(boxplot.stats(y)$out), "red", "steelblue"))
+qqline(y)
+txt <- c("Outliers of y include:", round(boxplot.stats(y)$out, 2))
+mtext(paste(txt, sep=" ", collapse="  "), outer = TRUE, cex = 1)
+
+```
+
+-----
+
+##### (3)  Performing hypothesis tests using random samples is fundamental to statistical inference. The first part of this problem involves comparing two different diets. Using "ChickWeight" data available in the base R, "datasets" package, execute the following code to prepare a data frame for analysis.
+
+
+```{r test3, eval = TRUE, echo = TRUE}
+
+# load "ChickWeight" dataset
+data(ChickWeight)
+
+# Create T | F vector indicating observations with Time == 21 and Diet == "1" OR "3"
+index <- ChickWeight$Time == 21 & (ChickWeight$Diet == "1" | ChickWeight$Diet == "3")
+
+# Create data frame, "result," with the weight and Diet of those observations with "TRUE" "index"" values
+result <- subset(ChickWeight[index, ], select = c(weight, Diet))
+
+# Encode "Diet" as a factor
+result$Diet <- factor(result$Diet)
+str(result) 
+
+```
+
+##### The data frame, "result", will have chick weights for two diets, identified as diet "1" and "3". Use the data frame, "result," to complete the following item.
+
+(3)(a) (4 points) Use the "weight" data for the two diets to test the null hypothesis of equal population weights for the two diets. Test at the 95% confidence level with a two-sided t-test. This can be done using *t.test()* in R. Assume equal variances. Display the results.
+
+```{r test3a, eval = TRUE, echo = TRUE}
+x <- result$weight[result$Diet == 1]
+y <- result$weight[result$Diet == 3]
+t_test <- t.test(x, y)
+res <- ifelse(t_test$p.value < .05, "Reject Null Hypothesis", "Fail to Reject Null Hypothesis") 
+print(res)
+print(t_test)
+```
+
+#####  Working with paired data is another common statistical activity. The "ChickWeight" data will be used to illustrate how the weight gain from week 20 to 21 may be analyzed. Use the following code to prepare pre- and post-data from Diet == "3" for analysis.
+
+```{r test3paired, eval = TRUE, echo = TRUE}
+
+# load "ChickWeight" dataset
+data(ChickWeight)
+
+# Create T | F vector indicating observations with Diet == "3"
+index <- ChickWeight$Diet == "3"
+
+# Create vector of "weight" for observations where Diet == "3" and Time == 20
+pre <- subset(ChickWeight[index, ], Time == 20, select = weight)$weight
+
+# Create vector of "weight" for observations where Diet == "3" and Time == 21
+post <- subset(ChickWeight[index, ], Time == 21, select = weight)$weight
+
+```
+
+(3)(b) (6 points) Conduct a paired t-test and construct a two-sided, 95% confidence interval for the average weight gain from week 20 to week 21. **Do not use *t.test()*.** Write the code for determination of the confidence interval endpoints. Present the resulting interval.
+
+```{r test3b, eval = TRUE, echo = TRUE}
+dif <- post - pre
+n   <- length(dif)
+avg <- mean(dif)
+t_stat <- avg / (sd(dif) / sqrt(n))
+print(paste("t =", round(t_stat, 4)))
+
+p_val <- 2 * pt(t_stat, n - 1, lower = FALSE)
+print(paste("p =", round(p_val, 4)))
+
+t_tbl <- 2.262 # from lookup for 95% conf
+conf <- round(c(-t_tbl, t_tbl) * (sd(dif) / sqrt(n)) + avg, 4)
+print(c("Confidence interval=", conf))
+
+```
+
+-----
+
+##### (4)  Statistical inference depends on using a sampling distribution for a statistic in order to make confidence statements about unknown population parameters. The Central Limit Theorem is used to justify use of the normal distribution as a sampling distribution for statistical inference. Using Nile River flow data from 1871 to 1970, this problem demonstrates sampling distribution convergence to normality. Use the code below to prepare the data.
+
+
+```{r test4, eval = TRUE, echo = TRUE}
+data(Nile)
+str(Nile)
+
+```
+
+(4)(a) (3 points) Using Nile River flow data and the "moments" package, calculate skewness and kurtosis. Present side-by-side displays using *qqnorm()*, *qqline()* and *boxplot()*; i.e *par(mfrow = c(1, 2))*. Add features to these displays as you choose.
+
+```{r test4a, eval = TRUE, echo = TRUE}
+library(moments) 
+k <- kurtosis(Nile)
+s <- skewness(Nile)
+
+par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
+boxplot(Nile, main = "Boxplot",
+        col = "steelblue", outcol = "red")
+qqnorm(Nile, main = "Q-Q Plot",
+       col = ifelse(Nile %in% c(boxplot.stats(Nile)$out), "red", "steelblue"))
+qqline(Nile)
+txt <- c("skewness:", round(s, 2), "kurtosis:", round(k, 2))
+mtext(paste(txt, sep=" ", collapse="  "), outer = TRUE, cex = 1)
+
+```
+
+(4)(b) (3 points) Using *set.seed(124)* and the Nile data, generate 1000 random samples of size n = 16, with replacement. For each sample drawn, calculate and store the sample mean. This will require a for-loop and use of the *sample()* function. Label the resulting 1000 mean values as "sample1". **Repeat these steps using *set.seed(127)* - a different "seed" - and samples of size n = 64.** Label these 1000 mean values as "sample2". Compute and present the mean value, sample standard deviation and sample variance for "sample1" and "sample2".
+
+```{r test4b, eval = TRUE, echo = TRUE}
+library(tidyverse)
+getSample <- function(x, n, seed) {
+  set.seed(seed)
+  sample_mean <- numeric(x)
+  for (i in 1:x) {
+    sample_mean[i] <- mean(sample(Nile, n, replace = TRUE))
+  }
+  return(sample_mean)
+}
+
+sample1 <- getSample(1000, 16, 124)
+sample2 <- getSample(1000, 64, 127)
+
+tribble(
+  ~sample, ~mean, ~standard_deviation, ~variance,
+  'sample1', mean(sample1), sd(sample1), var(sample1),
+  'sample2', mean(sample2), sd(sample2), var(sample2)
+)
+```
+
+(4)(c) (4 points) Using "sample1" and "sample2", present separate histograms with the normal density curve superimposed (use *par(mfrow = c(2, 1))*). To prepare comparable histograms it will be necessary to use "freq = FALSE" and to maintain the same x-axis with "xlim = c(750, 1050)", and the same y-axis with "ylim = c(0, 0.025)." **To superimpose separate density functions, you will need to use the mean and standard deviation for each "sample" - each histogram - separately.** 
+
+```{r test4c, eval = TRUE, echo = TRUE}
+par(mfrow = c(2, 1)) 
+hist(sample1, freq = FALSE, prob = TRUE, col = "antiquewhite2", 
+     xlab = " ",
+     xlim = c(750, 1050), ylim = c(0, 0.025),
+     main="Histogram with Normal Curve") 
+lines(density(sample1), col = "darksalmon", lwd = 2)    
+hist(sample2, freq = FALSE, prob = TRUE, col = "antiquewhite2", 
+     xlab = "Sample means of the river Nile annual flows at Aswan",
+     xlim = c(750, 1050), ylim = c(0, 0.025),
+     main = " ") 
+lines(density(sample2), col = "darksalmon", lwd = 2) 
+
+```
+
+-----
+
+##### (5)  This problem deals with 2 x 2 contingency table analysis. This is an example of categorical data analysis (see Kabacoff, pp. 145-151). The method shown in this problem can be used to screen data for potential predictors that may be used in building a model.
+
+#####The "Seatbelts" dataset contains monthly road casualties in Great Britain, 1969 to 1984. Use the code below to organize the data and generate two factor variables:  "killed" and "month".  These variables will be used for contingency table analysis.
+
+```{r test5, eval = TRUE, echo = TRUE}
+
+data(Seatbelts)
+Seatbelts <- as.data.frame(Seatbelts)
+
+Seatbelts$Month <- seq(from = 1, to = nrow(Seatbelts))
+Seatbelts <- subset(Seatbelts, select = c(DriversKilled, Month))
+summary(Seatbelts)
+
+killed <- factor(Seatbelts$DriversKilled > 118.5, labels = c("below", "above"))
+
+month <- factor(Seatbelts$Month > 96.5, labels = c("below", "above"))
+
+```
+
+(5)(a) (3 points) Using "Seatbelts," generate a scatterplot of the variables DriversKilled versus Month. This is a time series, and Seatbelts$Month should be on the horizontal axis. Show vertical and horizontal lines to indicate the median of each variable. Label as desired.
+
+```{r test5a, eval = TRUE, echo = TRUE}
+library(ggplot2)
+Seatbelts <- Seatbelts %>% 
+  mutate(cat = ifelse(killed == "below", 
+                      ifelse(month == "below", "Below/Below", "Below/Above"),
+                      ifelse(month == "below", "Above/Below", "Above/Above")))
+ggplot(Seatbelts, aes(Month, DriversKilled)) + 
+  geom_point(aes(color = cat), shape = 21, size = 2) +
+  geom_hline(yintercept = median(Seatbelts$DriversKilled), color = "midnightblue") +
+  geom_vline(xintercept = median(Seatbelts$Month), color = "midnightblue") +
+  theme_bw() + labs(title = "Drivers Killed by Month in Great Britain",
+                    color = "Versus Median")
+
+```
+
+(5)(b) (2 points) A chi-square test of independence will be used (see Black, Section 16.2) to test the null hypothesis that the factor variables, "killed" and "month", are independent. Use *table()* to generate a 2 x 2 contingency table showing the fatality count classified by "killed" and "month". Use the **uncorrected** *chisq.test()* to test the null hypothesis that "killed" and "month" are independent at the 95% confidence level. Present these results.
+
+```{r test5b, eval = TRUE, echo = TRUE}
+seatbelts <- with(Seatbelts, table(killed, month))
+x2 <- chisq.test(seatbelts, correct = FALSE)
+cv <- 3.841
+res <- ifelse(x2$statistic[[1]] <= cv, "fail to", "")
+print(paste0("Because X-squared is ", round(x2$statistic[[1]], 2), 
+             " and the critical value is ", cv, ",", 
+             res, " reject the null hypothesis"))
+print(x2)
+```
+
+(5)(c) (5 points) Write a function that computes the uncorrected Pearson Chi-squared statistic based on the a 2 x 2 contingency table with margins added (check Davies, Section 11.1.1, pp. 216-219, and Kabacoff, Section 20.1.3, pp. 473-474). Add margins to the contingency table from (b) using the function *addmargins()*. Submit this augmented table to the function you have written. Compare the result with (b). Your function should duplicate and output the X-squared value (chi-squared) and *p*-value.  Present both results.
+
+```{r test5c, eval = TRUE, echo = TRUE}
+# Write function for computing uncorrected Pearson Chi-squared statistic and associated p-value
+library(zipfR)
+'%p%' <- function(x2, df) 1 - Igamma(df / 2, x2 / 2) / Cgamma(df / 2)
+
+chi2 <- function(x) {
+  nr <- nrow(x) - 1
+  nc <- ncol(x) - 1
+  
+  y <- matrix(NA, nrow = nr, ncol = nc)
+  
+  y[1, 1] <- x[3, 1] * x[1, 3] / x[3, 3]
+  y[1, 2] <- x[3, 2] * x[1, 3] / x[3, 3]
+  y[2, 1] <- x[3, 1] * x[2, 3] / x[3, 3]
+  y[2, 2] <- x[3, 2] * x[2, 3] / x[3, 3]
+
+  x <- x[(1:nr), (1:nc)]
+  x2 <- sum((x - y) ^ 2 / y)
+  
+  p_val <- x2 %p% ((nr - 1) * (nc - 1))
+  c(x2, p_val)
+} 
+
+res <- chi2(addmargins(seatbelts))
+
+tribble(
+  ~test, ~chi_squared, ~p_value,
+  'chi-square function', x2$statistic[[1]], x2$p.value,
+  'manual calculation', res[1], res[2]
+)
+```
