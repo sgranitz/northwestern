@@ -22,10 +22,7 @@ sns.set(style="whitegrid")
 def gather(df, key, value, cols):
     # Combine multiple columns into key/value columns
     id_vars = [col for col in df.columns if col not in cols]
-    id_values = cols
-    var_name = key
-    value_name = value
-    return pd.melt(df, id_vars, id_values, var_name, value_name)
+    return pd.melt(df, id_vars, cols, key, value)
 
 # Read data
 valid_survey_input = pd.read_csv('mspa-survey-data.csv')
