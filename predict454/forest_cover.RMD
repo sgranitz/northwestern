@@ -4,6 +4,7 @@ output: rmarkdown::github_document
 ---
 
 
+Load libraries 
 
 ```{r libraries, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(tidyverse)
@@ -19,6 +20,7 @@ library(skimr)
 library(ggthemr)
 ```
 
+Load data, set ggplot theme
 
 ```{r}
 #gunzip("C:/Users/sgran/Downloads/covtype.data.gz")
@@ -28,6 +30,8 @@ raw_data <- read_csv("C:/Users/sgran/Downloads/covtype.data",
 
 ggthemr('fresh')
 ```
+
+Format column names
 
 ```{r}
 col_names <- c(
@@ -68,6 +72,8 @@ raw_data %>% tabyl(cover_type)
 
 ```
 
+Split data
+
 ```{r}
 set.seed(10)
 
@@ -84,10 +90,14 @@ raw_train <- raw_data[train_index,]
 raw_test  <- raw_data[-train_index,]
 ```
 
+Look at training data, high level skim
 
 ```{r}
 skim(raw_train)
 ```
+
+Check soil variables
+What soil is present for different cover types?
 
 ```{r}
 train_soil <- raw_train %>%
@@ -103,9 +113,9 @@ train_soil %>%
     geom_col() +
     facet_grid(~cover_type) +
     coord_flip()
- 
- 
 ```
+
+Proportion of soils present for each cover type
 
 ```{r}
 train_soil %>% 
@@ -113,8 +123,9 @@ train_soil %>%
     ggplot(aes(cover_type, val, fill = soil)) +
     geom_col(position="fill") +
     coord_flip()
-
 ```
+
+Correlations of soil types
 
 ```{r}
 raw_train %>% 
@@ -127,6 +138,9 @@ raw_train %>%
     geom_tile()
 
 ```
+
+Check wilderness variables
+What wilderness is there with each cover type?
 
 ```{r}
 train_wild <- raw_train %>%
@@ -144,14 +158,17 @@ train_wild %>%
     coord_flip()
 ```
 
+Proportion of wilderness area for each cover type
+
 ```{r}
 train_wild %>% 
     filter(val > 0) %>% 
     ggplot(aes(cover_type, val, fill = wild)) +
     geom_col(position="fill") +
     coord_flip()
-
 ```
+
+Wilderness area correlations
 
 ```{r}
 raw_train %>% 
@@ -162,8 +179,10 @@ raw_train %>%
            v2 = parse_number(Var2)) %>% 
     ggplot(aes(v1, v2, fill = value)) +
     geom_tile()
-
 ```
+
+Proportion of soil/widerness combos for
+each cover type
 
 ```{r}
 raw_train %>% 
@@ -182,10 +201,11 @@ raw_train %>%
     ungroup() %>% 
     ggplot(aes(wild, soil, color=cover_type, size = prop)) + 
     geom_point() +
-    facet_grid(~cover_type)
-    
+    facet_grid(~cover_type) 
 ```
 
+Shade measure by time of day
+for each cover type
 
 ```{r}
 raw_train %>% 
@@ -200,6 +220,7 @@ raw_train %>%
     theme(legend.position="none")
 ```
 
+Distance measures for each cover type
 
 ```{r}
 raw_train %>% 
@@ -211,8 +232,9 @@ raw_train %>%
     coord_flip() +
     facet_grid(~dist, scales = "free") +
     theme(legend.position="none")
-
 ```
+
+Remaining variables for each cover type
 
 ```{r}
 raw_train %>% 
@@ -223,6 +245,4 @@ raw_train %>%
     coord_flip() +
     facet_grid(~key, scales = "free") +
     theme(legend.position="none")
-
 ```
-
