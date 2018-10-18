@@ -1,0 +1,228 @@
+---
+title: "R Notebook"
+output: rmarkdown::github_document
+---
+
+
+
+```{r libraries, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(glue)
+library(R.utils)
+library(janitor)
+library(caret)
+library(reshape2)
+library(gridExtra)
+library(grid)
+library(lattice)
+library(skimr)
+library(ggthemr)
+```
+
+
+```{r}
+#gunzip("C:/Users/sgran/Downloads/covtype.data.gz")
+
+raw_data <- read_csv("C:/Users/sgran/Downloads/covtype.data",
+                     col_names = FALSE)
+
+ggthemr('fresh')
+```
+
+```{r}
+col_names <- c(
+  "elevation",
+  "aspect",
+  "slope",
+  "horizontal_distance_to_hydrology",
+  "vertical_distance_to_hydrology",
+  "horizontal_distance_to_roadways",
+  "hillshade_9am",
+  "hillshade_noon",
+  "hillshade_3pm",
+  "horizontal_distance_to_fire_points",
+  glue::glue("wilderness_area{x}", x = 1:4),
+  glue::glue("soil_type{x}", x = 1:40),
+  "cover_type"
+)
+
+names(raw_data) <- col_names
+
+raw_data$cover_type <- factor(
+  x = raw_data$cover_type,
+  levels = 1:7,
+  labels = c(
+    "spruce_fir",
+    "lodgepole_pine",
+    "ponderosa_pine",
+    "cottonwood_Willow",
+    "aspen",
+    "douglasfir",
+    "krummholz"
+  )
+)
+```
+
+```{r}
+raw_data %>% tabyl(cover_type)
+
+```
+
+```{r}
+set.seed(10)
+
+train_index <- caret::createDataPartition(
+  y = raw_data$cover_type,
+  p = 0.7,
+  times = 1,
+  list = FALSE
+)
+```
+
+```{r}
+raw_train <- raw_data[train_index,]
+raw_test  <- raw_data[-train_index,]
+```
+
+
+```{r}
+skim(raw_train)
+```
+
+```{r}
+train_soil <- raw_train %>%
+    dplyr::select(cover_type, contains("soil")) %>%
+    gather(-cover_type, key = soil, value = val) %>%
+    mutate(soil = parse_number(soil), n=1) 
+
+train_soil %>% 
+    group_by(cover_type, soil) %>%
+    summarise(total = sum(val),
+              prop  = total / sum(n)) %>% 
+    ggplot(aes(soil, prop, fill = cover_type)) + 
+    geom_col() +
+    facet_grid(~cover_type) +
+    coord_flip()
+ 
+ 
+```
+
+```{r}
+train_soil %>% 
+    filter(val > 0) %>% 
+    ggplot(aes(cover_type, val, fill = soil)) +
+    geom_col(position="fill") +
+    coord_flip()
+
+```
+
+```{r}
+raw_train %>% 
+    dplyr::select(contains("soil")) %>% 
+    cor() %>% 
+    melt() %>% 
+    mutate(v1 = parse_number(Var1),
+           v2 = parse_number(Var2)) %>% 
+    ggplot(aes(v1, v2, fill = value)) +
+    geom_tile()
+
+```
+
+```{r}
+train_wild <- raw_train %>%
+    dplyr::select(cover_type, contains("wilderness")) %>%
+    gather(-cover_type, key = wild, value = val) %>%
+    mutate(wild = parse_number(wild), n=1) 
+
+train_wild %>% 
+    group_by(cover_type, wild) %>%
+    summarise(total = sum(val),
+              prop  = total / sum(n)) %>% 
+    ggplot(aes(wild, prop, fill = cover_type)) + 
+    geom_col() +
+    facet_grid(~cover_type) +
+    coord_flip()
+```
+
+```{r}
+train_wild %>% 
+    filter(val > 0) %>% 
+    ggplot(aes(cover_type, val, fill = wild)) +
+    geom_col(position="fill") +
+    coord_flip()
+
+```
+
+```{r}
+raw_train %>% 
+    dplyr::select(contains("wilderness")) %>% 
+    cor() %>% 
+    melt() %>% 
+    mutate(v1 = parse_number(Var1),
+           v2 = parse_number(Var2)) %>% 
+    ggplot(aes(v1, v2, fill = value)) +
+    geom_tile()
+
+```
+
+```{r}
+raw_train %>% 
+    dplyr::select(cover_type, contains("soil"), contains("wilderness")) %>% 
+    mutate(n=1) %>% 
+    gather(contains("soil"), key = soil, value = soil_val) %>%
+    gather(contains("wilderness"), key = wild, value = wild_val) %>%
+    filter(soil_val > 0, wild_val > 0) %>% 
+    group_by(cover_type, soil, wild) %>% 
+    summarise(n = sum(n)) %>% 
+    ungroup() %>% 
+    group_by(cover_type) %>% 
+    mutate(prop = n / sum(n)) %>%
+    mutate(soil = parse_number(soil), 
+           wild = parse_number(wild)) %>% 
+    ungroup() %>% 
+    ggplot(aes(wild, soil, color=cover_type, size = prop)) + 
+    geom_point() +
+    facet_grid(~cover_type)
+    
+```
+
+
+```{r}
+raw_train %>% 
+    dplyr::select(cover_type, contains("hillshade")) %>% 
+    gather(-cover_type, key = shade, value = val) %>% 
+    mutate(shade = factor(shade, levels = c("hillshade_9am", "hillshade_noon", "hillshade_3pm"))) %>% 
+    ggplot(aes(cover_type, val)) +
+    geom_jitter(aes(color = shade), alpha = 0.05, stroke = 0) +
+    geom_boxplot(aes(fill = shade)) +
+    coord_flip() +
+    facet_grid(~shade) +
+    theme(legend.position="none")
+```
+
+
+```{r}
+raw_train %>% 
+    dplyr::select(cover_type, contains("distance")) %>% 
+    gather(-cover_type, key = dist, value = val) %>% 
+    ggplot(aes(cover_type, val)) +
+    geom_jitter(aes(color = dist), alpha = 0.05, stroke = 0) +
+    geom_boxplot(aes(fill = dist)) +
+    coord_flip() +
+    facet_grid(~dist, scales = "free") +
+    theme(legend.position="none")
+
+```
+
+```{r}
+raw_train %>% 
+    dplyr::select(cover_type, aspect, elevation, slope) %>% 
+    gather(-cover_type, key = key, value = val) %>% 
+    ggplot(aes(cover_type, val, fill = cover_type)) +
+    geom_boxplot() +
+    coord_flip() +
+    facet_grid(~key, scales = "free") +
+    theme(legend.position="none")
+
+```
+
