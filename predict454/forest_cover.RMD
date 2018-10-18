@@ -234,6 +234,16 @@ raw_train %>%
     theme(legend.position="none")
 ```
 
+```{r}
+raw_train %>% 
+    dplyr::select(cover_type, contains("hydrology")) %>% 
+    ggplot(aes(horizontal_distance_to_hydrology, vertical_distance_to_hydrology)) +
+    geom_point(aes(color = cover_type), alpha = 0.01, stroke = 0) +
+    geom_smooth() +
+    facet_grid(~cover_type) +
+    theme(legend.position="none")
+```
+
 Remaining variables for each cover type
 
 ```{r}
